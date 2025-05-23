@@ -20,8 +20,8 @@ To solve the plug and play equivalent of this problem, where the total variation
 
 For the definition of IMLPNP we used the same principles than for IMLFB or IMLFISTA [1]_. See [2]_ for a more comprehensive study of the multilevel plug and play framework.
 
-Set-up
--------
+Set-up with conda
+-----------------
 To create the environment with the required packages:
 
 .. code-block:: bash
@@ -29,6 +29,16 @@ To create the environment with the required packages:
     $ git clone https://github.com/laugaguillaume/IMLFISTA.git
     $ conda env create -f environment.yml
     $ conda activate imlfista
+
+Set-up with pip 
+---------------
+To create the environment with the required packages:
+.. code-block:: bash
+
+    $ git clone https://github.com/laugaguillaume/IMLFISTA.git
+    $ python3 -m venv imlfista
+    $ source imlfista/bin/activate
+    $ pip install -r requirements.txt
 
 Quick start
 -----------
