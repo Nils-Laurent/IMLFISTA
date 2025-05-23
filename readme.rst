@@ -1,6 +1,6 @@
 IML FISTA : a multilevel algorithm for image restoration
 ========================================================
-|Python 3.9+|
+|Python 3.9|
 
 This repository contains a :code:`python` version of the algorithm proposed in [1]_. The purpose of this repository is the comparison of several multilevel algorithms with their single level counterpart. Standard algorithms are implemented to solve the following problem:
 
@@ -20,6 +20,10 @@ To solve the plug and play equivalent of this problem, where the total variation
 
 For the definition of IMLPNP we used the same principles than for IMLFB or IMLFISTA [1]_. See [2]_ for a more comprehensive study of the multilevel plug and play framework.
 
+Python version
+--------------
+This code is compatible with Python 3.9 (due to the DeepInverse library). Higher versions of Python may fail to run the code correctly.
+
 Set-up with conda
 -----------------
 To create the environment with the required packages:
@@ -33,6 +37,7 @@ To create the environment with the required packages:
 Set-up with pip 
 ---------------
 To create the environment with the required packages:
+
 .. code-block:: bash
 
     $ git clone https://github.com/laugaguillaume/IMLFISTA.git
