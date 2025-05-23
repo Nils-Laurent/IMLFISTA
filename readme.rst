@@ -59,7 +59,7 @@ This script :code:`demo_minimal.py` is arranged as follows: load an image
     # Reduce image size for testing
     x = x[:, :, ::4, ::4]
 
-with the linear degradation of your choice from `DeepInverse <https://deepinv.github.io/deepinv/index.html>` specifically `Operator & Noise <https://deepinv.github.io/deepinv/user_guide/physics/physics.html>`:
+with the linear degradation of your choice from `DeepInverse <https://deepinv.github.io/deepinv/index.html>`_ specifically `Operator & Noise <https://deepinv.github.io/deepinv/user_guide/physics/physics.html>`_:
 
 .. code-block:: python
 
