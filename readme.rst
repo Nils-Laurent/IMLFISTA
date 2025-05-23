@@ -120,6 +120,7 @@ If you want to add an other algorithm simply add it inside:
         x_IMLFISTA, metrics_IMLFISTA = model.IMLFISTA(init)
 
 without forgetting to add the new metrics to the plot function like:
+
 .. code-block:: python
 
     PlotSLvsML(x, y, F_init, PSNR_init, x_hat, F_min, PSNR_hat, x_FB=x_FB, metrics_FB=metrics_FB, x_IMLFB=x_IMLFB, metrics_IMLFB=metrics_IMLFB, x_IMLFISTA=x_IMLFISTA, metrics_IMLFISTA = metrics_IMLFISTA)
