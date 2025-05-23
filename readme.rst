@@ -42,6 +42,7 @@ To create the environment with the required packages:
 .. code-block:: bash
 
     $ git clone https://github.com/laugaguillaume/IMLFISTA.git
+    $ cd IMLFISTA
     $ python3 -m venv imlfista
     $ source imlfista/bin/activate
     $ pip install -r requirements.txt
