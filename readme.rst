@@ -169,6 +169,6 @@ and add its name under the list of filters in
 References
 ----------
 
-.. [1] G. Lauga, E. Riccietti, N. Pustelnik, P. Gonçalves, "IML FISTA: A Multilevel Framework for Inexact and Inertial Forward-Backward. Application to Image Restoration", SIAM Journal on Imaging Sciences, 2024. https://arxiv.org/abs/2304.13329
+.. [1]  G. Lauga, E. Riccietti, N. Pustelnik, P. Gonçalves, "IML FISTA: A Multilevel Framework for Inexact and Inertial Forward-Backward. Application to Image Restoration", SIAM Journal on Imaging Sciences, 2024. https://arxiv.org/abs/2304.13329
 
-.. [2] N. Laurent, J. Tachella, E. Riccietti, N. Pustelnik. "Multilevel Plug-and-Play Image Restoration", 2025. https://hal.science/hal-05004914/
+.. [2]  N. Laurent, J. Tachella, E. Riccietti, N. Pustelnik. "Multilevel Plug-and-Play Image Restoration", 2025. https://hal.science/hal-05004914/
