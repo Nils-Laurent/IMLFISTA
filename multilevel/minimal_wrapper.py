@@ -298,7 +298,7 @@ def PlotSLvsML(x, y, F_init, PSNR_init, x_hat, F_min, PSNR_hat, x_FB=None, metri
     if metrics_FB is None and metrics_FISTA is None and metrics_IMLFB is None and metrics_IMLFISTA is None and metrics_PNP is None and metrics_IMLPNP is None:
         raise ValueError("No metrics provided for FB, IMLFB, FISTA, IMLFISTA, PNP or IMLPNP \n Run the algorithm first")
     best_x, best_psnr, best_alg = identify_best_reconstruction(x_FB=x_FB, x_FISTA=x_FISTA, x_IMLFB=x_IMLFB, x_IMLFISTA=x_IMLFISTA, x_PNP=x_PNP, x_IMLPNP=x_IMLPNP, metrics_FB=metrics_FB, metrics_FISTA=metrics_FISTA, metrics_IMLFB=metrics_IMLFB, metrics_IMLFISTA=metrics_IMLFISTA, metrics_PNP=metrics_PNP, metrics_IMLPNP=metrics_IMLPNP)
-    dinv.utils.plot([x, y, best_x], titles=["Original","Measurements PSNR = {:.2f}dB".format(PSNR_init),f"Best alg: {best_alg} - PSNR = {best_psnr:.2f}dB"],figsize=[10,3]) 
+    dinv.utils.plot([x, y, best_x], titles=["Original","Measurements PSNR = {:.2f}dB".format(PSNR_init),f"Best alg: {best_alg} - PSNR = {best_psnr:.2f}dB"],figsize=[10,3], save_fn="images.png") 
     fig, axs = plt.subplots(1, 3, figsize=(12, 4))  
     if x_FB is None and x_FISTA is None and x_IMLFB is None and x_IMLFISTA is None:
         raise ValueError("No x_FB, x_FISTA, x_IMLFB or x_IMLFISTA provided")
@@ -341,7 +341,7 @@ def PlotSLvsML(x, y, F_init, PSNR_init, x_hat, F_min, PSNR_hat, x_FB=None, metri
     axs[2].legend()
     axs[2].set_title('PSNR w.r.t. iter')
     plt.tight_layout()
-    plt.show()
+    plt.savefig("metrics.png")
 
 def identify_best_reconstruction(x_FB=None, x_FISTA = None, x_IMLFB = None, x_IMLFISTA = None, x_PNP = None, x_IMLPNP = None, metrics_FB=None, metrics_IMLFB=None, metrics_FISTA=None, metrics_IMLFISTA=None, metrics_PNP=None, metrics_IMLPNP=None):
     if metrics_FB is None and metrics_FISTA is None and metrics_IMLFB is None and metrics_IMLFISTA is None and metrics_PNP is None and metrics_IMLPNP is None:
