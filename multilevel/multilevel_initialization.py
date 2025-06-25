@@ -52,7 +52,7 @@ def ml_init_pnp(xk, level_max, levels, args_multilevel, param_regularization, de
     xk = information_transfer.to_fine(xk_coarse, xk.shape[-3:])
     return xk
 
-def ml_pnp_init_with_solver(init, solver):
+def ml_init_pnp_with_solver(init, solver):
     x0 = init.clone()
     levels = solver.levels
     return ml_init_pnp(x0, levels, levels - 1, solver.args_multilevel, solver.regularization, solver.denoiser, solver.device)

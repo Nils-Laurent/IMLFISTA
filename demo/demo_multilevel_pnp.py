@@ -4,15 +4,16 @@
 Created on June 2025
 @author: Nils Laurent
 """
-
+import matplotlib.pyplot as plt
 #pip install git+https://github.com/deepinv/deepinv.git#egg=deepinv
 
 
 import torch
+from deepinv.utils import plot_curves
 from torchvision.io import read_image
-from multilevel.minimal_wrapper import MultilevelSolver, PlotSLvsML
-from multilevel.multilevel import create_information_transfer, create_grad_prior
-from multilevel.multilevel_initialization import ml_pnp_init_with_solver
+from multilevel.minimal_wrapper import perf_psnr
+from multilevel.multilevel import ParametersMultilevel, MultiLevel
+from multilevel.multilevel_initialization import ml_init_pnp
 import deepinv as dinv
 
 device = 'cpu'
@@ -28,41 +29,64 @@ physics = dinv.physics.Inpainting(
 # generate measurement
 y = physics(x)
 back = physics.A_adjoint(y)
-model = MultilevelSolver(x, y, physics, device=device)
 
 # ML PnP paper settings
-denoiser = dinv.models.DRUNet(in_channels=3, out_channels=3, pretrained="download")
-model.IMLPNP_solver.denoiser = dinv.models.EquivariantDenoiser(denoiser, random=True)
-model.IMLPNP_solver.args_multilevel.denoiser = model.IMLPNP_solver.denoiser
-model.IMLPNP_solver.args_multilevel.grad_prior = create_grad_prior(model.IMLPNP_solver.prior, denoiser, device)
-model.IMLPNP_solver.data_fidelity = dinv.optim.L2()
-model.IMLPNP_solver.max_iter = 20
-model.IMLPNP_solver.levels = 3  # was 4, but the image is small
-model.IMLPNP_solver.args_multilevel.levels = model.IMLPNP_solver.levels
-model.IMLPNP_solver.max_ML_steps = 2
-model.IMLPNP_solver.args_multilevel.max_ML_steps = model.IMLPNP_solver.max_ML_steps
-model.IMLPNP_solver.info_transfer = "sinc"
-model.IMLPNP_solver.args_multilevel.information_transfer = create_information_transfer(model.IMLPNP_solver.info_transfer, device)
-model.IMLPNP_solver.args_multilevel.step_size = 1.0
-model.IMLPNP_solver.regularization = 0.0801
+denoiser_0 = dinv.models.DRUNet(in_channels=3, out_channels=3, pretrained="download")
+denoiser = dinv.models.EquivariantDenoiser(denoiser_0, random=True)
+prior = dinv.optim.prior.PnP(denoiser=denoiser)
+data_fidelity = dinv.optim.L2()
+levels = 4
+max_ML_steps = 2
+info_transfer = "sinc"
+step_size = 1.0
+regularization = 0.0801
 
-# gamma : ML PnP does not depend on gamma
+args_multilevel = ParametersMultilevel(
+    target_shape=x.shape[-3:],
+    levels=levels,
+    max_ML_steps=max_ML_steps,
+    param_coarse_iter=-1,  # will be defined later
+    step_size=step_size,
+    info_transfer=info_transfer,
+    prior=prior,
+    denoiser=denoiser,
+    data_fidelity=data_fidelity,
+    physics=physics,
+    observation=y,
+    device=device
+)
 
-# run
 with torch.no_grad():
+    print("initialize ...")
     init = back.clone()
-    F_init, PSNR_init = model.compute_metrics_at_init(init)
-    print("init in progress ...")
-    model.IMLPNP_solver.coarse_iter = 5
-    model.IMLPNP_solver.args_multilevel.param_coarse_iter = model.IMLPNP_solver.coarse_iter
-    ml_init = ml_pnp_init_with_solver(init, model.IMLPNP_solver)
-    _, PSNR_ML_init = model.compute_metrics_at_init(ml_init)
+    PSNR_init = perf_psnr(x, init).item()
+
+    args_multilevel.coarse_iter = 5
+    ml_init = ml_init_pnp(init, levels, levels - 1, args_multilevel, regularization, denoiser, device)
+    PSNR_ML_init = perf_psnr(x, ml_init).item()
+
     print("solver is running ...")
-    model.IMLPNP_solver.coarse_iter = 3
-    model.IMLPNP_solver.args_multilevel.param_coarse_iter = model.IMLPNP_solver.coarse_iter
-    x_IMLPNP, metrics_IMLPNP = model.IMLPNP_solver.solve(ml_init)
-    _, PSNR_out = model.compute_metrics_at_init(x_IMLPNP)
+    args_multilevel.coarse_iter = 3
+
+    psnr_sequence = [PSNR_init, PSNR_ML_init]
+    xk = ml_init
+    for k in range(20):
+        xk_prev = xk.clone()
+        if k < max_ML_steps:
+            cst_grad = None  # coherence not required on finest level
+            ml_step = MultiLevel(xk_prev, levels, levels-1, args_multilevel, regularization, cst_grad, device)
+        xk = ml_step - step_size*data_fidelity.grad(ml_step, y, physics)
+        xk = denoiser(xk, sigma=regularization)
+        psnr_sequence.append(perf_psnr(x, xk).item())
+        if k % 10 == 0:
+            print(f"psnr ML[{k}]: {psnr_sequence[-1]}")
     print("done.")
+
+    x_IMLPNP = xk
+    PSNR_out = psnr_sequence[-1]
+
+plt.figure()
+plt.plot(range(len(psnr_sequence)), psnr_sequence)
 
 dinv.utils.plot(
     [x, y, ml_init, x_IMLPNP],
@@ -75,4 +99,3 @@ dinv.utils.plot(
     figsize=[10, 3]
 )
 
-# Tracer les courbes de PSNR

@@ -185,10 +185,7 @@ class Residual(nn.Module):
             self.l12prior = dinv.optim.L12Prior()
     def forward(self, x, gamma):
         if isinstance(self.prior, dinv.optim.prior.PnP):
-            if isinstance(self.denoiser, dinv.models.DRUNet):
-                return (x - self.denoiser(x, gamma) )
-            else:
-                return (x - self.denoiser(x) )
+            return (x - self.denoiser(x, gamma) )
         if isinstance(self.prior, dinv.optim.TVPrior):
             Dx = self.prior.nabla(x) # The TV operator is not normalized, so Lipschit constant is ||D||_2^2 = 8
             return 1/8 * gamma * self.prior.nabla_adjoint( Dx - self.l12prior.prox(Dx,gamma) )
