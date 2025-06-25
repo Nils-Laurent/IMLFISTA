@@ -30,7 +30,7 @@ To create the environment with the required packages:
 
 .. code-block:: bash
 
-    $ git clone https://github.com/laugaguillaume/IMLFISTA.git
+    $ git clone https://github.com/Nils-Laurent/IMLFISTA.git
     $ cd IMLFISTA
     $ conda env create -f environment.yml
     $ conda activate imlfista
@@ -41,7 +41,7 @@ To create the environment with the required packages:
 
 .. code-block:: bash
 
-    $ git clone https://github.com/laugaguillaume/IMLFISTA.git
+    $ git clone https://github.com/Nils-Laurent/IMLFISTA.git
     $ cd IMLFISTA
     $ python3 -m venv imlfista
     $ source imlfista/bin/activate
