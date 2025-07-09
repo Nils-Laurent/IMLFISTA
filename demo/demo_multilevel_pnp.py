@@ -9,8 +9,9 @@ import matplotlib.pyplot as plt
 
 
 import torch
-from deepinv.utils import plot_curves
 from torchvision.io import read_image
+
+from multilevel.info_transfer import DownsamplingTransfer, SincFilter
 from multilevel.minimal_wrapper import perf_psnr
 from multilevel.multilevel import ParametersMultilevel, MultiLevel
 from multilevel.multilevel_initialization import ml_init_pnp
@@ -31,7 +32,7 @@ y = physics(x)
 back = physics.A_adjoint(y)
 
 # ML PnP paper settings
-denoiser_0 = dinv.models.DRUNet(in_channels=3, out_channels=3, pretrained="download")
+denoiser_0 = dinv.models.DRUNet(in_channels=3, out_channels=3, device=device, pretrained="download")
 denoiser = dinv.models.EquivariantDenoiser(denoiser_0, random=True)
 prior = dinv.optim.prior.PnP(denoiser=denoiser)
 data_fidelity = dinv.optim.L2()
@@ -56,17 +57,34 @@ args_multilevel = ParametersMultilevel(
     device=device
 )
 
+coarse_observations = {f'level{levels}': y}
+coarse_y = y
+for i in range(levels-1, 0, -1):
+    ds = DownsamplingTransfer(SincFilter())
+    coarse_y = ds.to_coarse(coarse_y, coarse_y.shape[-3:])
+    coarse_observations[f'level{i}'] = coarse_y
+args_multilevel.observations = coarse_observations
+
+coarse_physics = {f'level{levels}': physics}
+coarse_data = physics.mask.data
+for i in range(levels-1, 0, -1):
+    coarse_data = args_multilevel.information_transfer.to_coarse(coarse_data, coarse_data.shape)
+    coarse_physics[f'level{i}'] = dinv.physics.Inpainting(
+        tensor_size=coarse_data.shape[1:], mask=coarse_data, device=physics.mask.device
+    )
+args_multilevel.coarse_physics = coarse_physics
+
 with torch.no_grad():
     print("initialize ...")
     init = back.clone()
     PSNR_init = perf_psnr(x, init).item()
 
-    args_multilevel.coarse_iter = 5
+    args_multilevel.param_coarse_iter = 5
     ml_init = ml_init_pnp(init, levels, levels - 1, args_multilevel, regularization, denoiser, device)
     PSNR_ML_init = perf_psnr(x, ml_init).item()
 
     print("solver is running ...")
-    args_multilevel.coarse_iter = 3
+    args_multilevel.param_coarse_iter = 3
 
     psnr_sequence = [PSNR_init, PSNR_ML_init]
     xk = ml_init
@@ -74,8 +92,10 @@ with torch.no_grad():
         xk_prev = xk.clone()
         if k < max_ML_steps:
             cst_grad = None  # coherence not required on finest level
-            ml_step = MultiLevel(xk_prev, levels, levels-1, args_multilevel, regularization, cst_grad, device)
-        xk = ml_step - step_size*data_fidelity.grad(ml_step, y, physics)
+            uk = MultiLevel(xk_prev, levels, levels-1, args_multilevel, regularization, cst_grad, device)
+        else:
+            uk = xk_prev
+        xk = uk - step_size*data_fidelity.grad(uk, y, physics)
         xk = denoiser(xk, sigma=regularization)
         psnr_sequence.append(perf_psnr(x, xk).item())
         if k % 10 == 0:
