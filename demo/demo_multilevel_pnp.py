@@ -22,10 +22,22 @@ device = 'cpu'
 # Load image from deepinv
 x = dinv.utils.load_url_image(url=dinv.utils.get_image_url("butterfly.png"), img_size=256).to(device)
 
-# Define linear operator
-physics = dinv.physics.Inpainting(
-    tensor_size=x.shape[1:], mask=0.5, device=device, noise_model=dinv.physics.GaussianNoise(0.1)
-)
+experiment_demosaicing = True  # True for demosaicing or False for inpainting
+
+if experiment_demosaicing is True:  # demosaicing
+    # Define linear operator and hyper parameters
+    physics = dinv.physics.Demosaicing(
+        x.shape[1:], device=device, noise_model=dinv.physics.GaussianNoise(0.1)
+    )
+    step_size = 1.17
+    regularization = 0.0801
+else:  # inpainting
+    # Define linear operator and hyper parameters
+    physics = dinv.physics.Inpainting(
+        tensor_size=x.shape[1:], mask=0.5, device=device, noise_model=dinv.physics.GaussianNoise(0.1)
+    )
+    step_size = 1.0
+    regularization = 0.0801
 
 # generate measurement
 y = physics(x)
@@ -39,8 +51,6 @@ data_fidelity = dinv.optim.L2()
 levels = 4
 max_ML_steps = 2
 info_transfer = "sinc"
-step_size = 1.0
-regularization = 0.0801
 
 args_multilevel = ParametersMultilevel(
     target_shape=x.shape[-3:],
@@ -109,12 +119,12 @@ plt.figure()
 plt.plot(range(len(psnr_sequence)), psnr_sequence)
 
 dinv.utils.plot(
-    [x, y, ml_init, x_IMLPNP],
+    [x, x_IMLPNP, ml_init, y],
     titles=[
         "Original",
-        f"Measurements PSNR = {PSNR_init:.2f}dB",
+        f"IMLPNP - PSNR = {PSNR_out:.2f}dB",
         f"ML init PSNR = {PSNR_ML_init:.2f}dB",
-        f"IMLPNP - PSNR = {PSNR_out:.2f}dB"
+        f"Measurements PSNR = {PSNR_init:.2f}dB",
     ],
     figsize=[10, 3]
 )
